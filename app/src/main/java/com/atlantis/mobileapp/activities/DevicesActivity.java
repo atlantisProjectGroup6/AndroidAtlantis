@@ -19,6 +19,7 @@ public class DevicesActivity extends AppCompatActivity {
 
     public static final String KEY_USER = "KEY_USER";
     public static final String KEY_DEVICE = "KEY_DEVICE";
+    public static final String KEY_CODE = "KEY_CODE";
 
     //UI
     ListView listView_devices;
@@ -29,6 +30,9 @@ public class DevicesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_devices);
 
         Intent i = getIntent();
+        String code = i.getStringExtra(KEY_CODE);
+        code = code.substring(code.indexOf("code=")+5);
+
         String userId = i.getStringExtra(KEY_USER);
 
         listView_devices = (ListView)findViewById(R.id.listView_devices);

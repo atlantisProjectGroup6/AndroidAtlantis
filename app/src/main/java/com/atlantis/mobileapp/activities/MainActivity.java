@@ -33,6 +33,15 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Button button = findViewById(R.id.button);
+        button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent inte = new Intent(MainActivity.this, EliotAuthActivity.class);
+                startActivityForResult(inte,0);
+            }
+        });
+
         //InitView
         editText_login = findViewById(R.id.editText_email);
         editText_password = findViewById(R.id.editText_password);

@@ -19,8 +19,13 @@ android :
     - 'android-sdk-license-.+'
     - 'google-gdk-license-.+'
 before_script :
+<<<<<<< HEAD
   - mkdir -p "$ANDROID_HOME/licenses"
   - cp ./licenses/* "$ANDROID_HOME/licenses"
+=======
+        - mkdir -p "$ANDROID_HOME/licenses"
+        - cp ./licenses/* "$ANDROID_HOME/licenses"
+>>>>>>> My code is here
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -29,6 +34,7 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
     - $HOME/.android/build-cache
+<<<<<<< HEAD
 addons:
   sonarcloud:
     organization: "atlantisprojectgroup6-github"
@@ -41,3 +47,9 @@ before_install:
   - chmod +x gradlew
 notifications:
     slack: atlantisprojectgroup:TWfvPT2fjFOVmh97nehKRzqZ
+=======
+script :
+    - ./gradlew build check
+before_install:
+- chmod +x gradlew
+>>>>>>> My code is here

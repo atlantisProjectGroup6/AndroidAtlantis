@@ -15,4 +15,8 @@
     <string name="error_field_required">This field is required</string>
     <string name="mail_already_exists">This mail already exists</string>
     <string name="user_created">User successfully created</string>
+    <string name="button_day">Day</string>
+    <string name="button_week">Week</string>
+    <string name="button_month">Month</string>
+
 </resources>
