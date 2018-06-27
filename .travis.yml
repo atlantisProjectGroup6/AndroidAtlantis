@@ -1,0 +1,43 @@
+language : android
+sudo : required
+jdk : oraclejdk8
+env:
+  global :
+    - ANROID_API_LEVEL = "28"
+    - ANDROID_BUILD_TOOLS_VERSION = "27.0.3"
+android :
+  components :
+    - tools
+    - platform-tools
+    - build-tools-$ANDROID_BUILD_TOOLS_VERSION
+    - android - $ANDROID_API_LEVEL
+    - extra-google-google_play_services
+    - extra-google-m2repository
+    - addon-google_apis-google-$ANDROID_API_LEVEL
+  licences :
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
+before_script :
+  - mkdir -p "$ANDROID_HOME/licenses"
+  - cp ./licenses/* "$ANDROID_HOME/licenses"
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
+addons:
+  sonarcloud:
+    organization: "atlantisprojectgroup6-github"
+    token:
+      secure: $SONAR_TOKEN
+script :
+  - ./gradlew build check
+  - ./gradlew sonarqube
+before_install:
+  - chmod +x gradlew
+notifications:
+    slack: atlantisprojectgroup:TWfvPT2fjFOVmh97nehKRzqZ
