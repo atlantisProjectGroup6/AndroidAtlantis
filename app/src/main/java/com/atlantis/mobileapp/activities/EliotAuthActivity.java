@@ -68,13 +68,14 @@ public class EliotAuthActivity extends AppCompatActivity {
     final static String TENANT_FULL = "https://login.microsoftonline.com/0d8816d5-3e7f-4c86-8229-645137e0f222/v2.0";
     final static String TENANT_DEFAULT = "https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0";
     final static String TENANT = "0d8816d5-3e7f-4c86-8229-645137e0f222";
+    final static String POLICY = "B2C_1_ThirdApp-AccountLinking";
     final static String REDIRECT_URI = "msal358ca400-fdf6-4357-8cca-27caa6699197://auth";
-    final static String AUTHORITY_URL = "https://login.microsoftonline.com/";
+    final static String AUTHORITY_URL = "https://login.microsoftonline.com/tfp/" + TENANT + ".onmicrosoft.com/" + POLICY;
     static final String KEY_CODE = "KEY_CODE";
     final static String AUTH_TAG = "auth";
     final static String SCOPES [] = {"https://graph.microsoft.com/User.Read"};
     final static String MSGRAPH_URL = "https://graph.microsoft.com/v1.0/me";
-    private static final String POLICY = "B2C_1_ThirdApp-AccountLinking";
+
 
     /* UI & Debugging Variables */
     WebView webView;
