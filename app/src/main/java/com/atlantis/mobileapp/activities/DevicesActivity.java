@@ -3,9 +3,11 @@ package com.atlantis.mobileapp.activities;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.objects.Device;
@@ -30,8 +32,10 @@ public class DevicesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_devices);
 
         Intent i = getIntent();
-        String code = i.getStringExtra(KEY_CODE);
-        code = code.substring(code.indexOf("code=")+5);
+        String token = i.getStringExtra(KEY_CODE);
+
+        Toast.makeText(DevicesActivity.this,token,Toast.LENGTH_LONG).show();
+        Log.d("access_token",":" + token);
 
         String userId = i.getStringExtra(KEY_USER);
 

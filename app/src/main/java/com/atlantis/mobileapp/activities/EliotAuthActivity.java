@@ -1,124 +1,107 @@
 package com.atlantis.mobileapp.activities;
 
-import android.app.Activity;
-import android.app.admin.DeviceAdminInfo;
+import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.Uri;
-import android.os.Handler;
-import android.support.annotation.Nullable;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.atlantis.mobileapp.R;
-import com.microsoft.identity.client.AuthenticationCallback;
-import com.microsoft.identity.client.AuthenticationResult;
-import com.microsoft.identity.client.MsalClientException;
-import com.microsoft.identity.client.MsalException;
-import com.microsoft.identity.client.MsalServiceException;
-import com.microsoft.identity.client.MsalUiRequiredException;
-import com.microsoft.identity.client.PublicClientApplication;
-import com.microsoft.identity.client.User;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 
-import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class EliotAuthActivity extends AppCompatActivity {
 
-    //https://login.microsoftonline.com/eliotclouduamprd.onmicrosoft.com/oauth2/v2.0/authorize?
-    //&p=b2c_1_eliot-signuporsignin-wwl
-    //&client_id=c3b23ef7-aa7d-4d3a-8253-efbb296457cd
-    // &redirect_uri=https%3a%2f%2fdeveloper.legrand.com%2fsignin-aad
-    // &response_mode=form_post
-    // &response_type=id_token
-    // &scope=openid
-    // &state=OpenIdConnect.AuthenticationProperties%3diw2lNyeAO-oKNG_Uu1tgNDZg3HMFVzqYcMbxKTMGzonKyme1obUSv2LCjL69F9HKGa9AzzHL7elVTAZiQtybzHXY9VLAYmwgSFScyHCLTEkvrP_5FRdXyYo_QN3u3k8she2k9f7w022c588nY69ZqPwy3Ngj4Ydi3bxYq9i2kkTLrDV8nuBVLS9aaYmMXIxQ0G62-p9hbQ4fun_O1vmkb4kMyTCLH2FlFADMZIZVRoDRo_1pmS_vinX-PYcSz23hKzrGVEoIWyaKcURwh7kOjA&nonce=636656962822245049.NjcyZjZhY2YtNDA1ZC00MzIwLTlhYTgtOTdkMmNmZTQwNDZlNzA3MmNmMDAtNzQ3Yi00NTljLWI5MjUtYmEwNTgxYTg5NmU0
-
-    //https://login.microsoftonline.com/eliotclouduamprd.onmicrosoft.com/oauth2/v2.0/authorize?client_id=358ca400-fdf6-4357-8cca-27caa6699197&p=B2C_1_ThirdApp-AccountLinking&response_type=code&state=d8cdccaa-0c37-4493-ab37-d5d92bc99cd7&scope=openid&p=B2C_1_ThirdApp-AccountLinking&redirect_uri=https://login.microsoftonline.com/tfp/oauth2/nativeclient
-
-    //https://partners-login.eliotbylegrand.com/authorize?client_id=358ca400-fdf6-4357-8cca-27caa6699197&response_type=code&redirect_uri=https://login.microsoftonline.com/tfp/oauth2/nativeclient
-    //?client_id=358ca400-fdf6-4357-8cca-27caa6699197
-    // &p=B2C_1_ThirdApp-AccountLinking
-    // &response_type=code
-    // &state=d8cdccaa-0c37-4493-ab37-d5d92bc99cd7
-    // &scope=openid
-    // &p=B2C_1_ThirdApp-AccountLinking
-    // &redirect_uri=https://login.microsoftonline.com/tfp/oauth2/nativeclient
-
-    /* Azure AD v2 Configs */
     final static String CLIENT_ID = "358ca400-fdf6-4357-8cca-27caa6699197";
-    final static String RESPONSE_TYPE = "code";
-    final static String TENANT_FULL = "https://login.microsoftonline.com/0d8816d5-3e7f-4c86-8229-645137e0f222/v2.0";
-    final static String TENANT_DEFAULT = "https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0";
-    final static String TENANT = "0d8816d5-3e7f-4c86-8229-645137e0f222";
-    final static String POLICY = "B2C_1_ThirdApp-AccountLinking";
-    final static String REDIRECT_URI = "msal358ca400-fdf6-4357-8cca-27caa6699197://auth";
-    final static String AUTHORITY_URL = "https://login.microsoftonline.com/tfp/" + TENANT + ".onmicrosoft.com/" + POLICY;
+    final static String CLIENT_SECRET = "*d,|`89Jnx/Ea5O8y$T724W4";
+    final static String REDIRECT_URI = "https://login.microsoftonline.com/tfp/oauth2/nativeclient";
     static final String KEY_CODE = "KEY_CODE";
-    final static String AUTH_TAG = "auth";
-    final static String SCOPES [] = {"https://graph.microsoft.com/User.Read"};
-    final static String MSGRAPH_URL = "https://graph.microsoft.com/v1.0/me";
+    final static String URL_AUTH = "https://partners-login.eliotbylegrand.com/authorize?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri=" + REDIRECT_URI;
 
-
-    /* UI & Debugging Variables */
+    String token;
     WebView webView;
-
-    private static final String TAG = MainActivity.class.getSimpleName();
-    Button callGraphButton;
-    Button signOutButton;
-
-    /* Azure AD Variables */
-    private PublicClientApplication sampleApp;
-    private AuthenticationResult authResult;
+    ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_eliot_auth_activity);
 
+        webView = (WebView) findViewById(R.id.webView_auth);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.setWebViewClient(new WebViewClient(){
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                String fragment = "?code=";
+                int start = url.indexOf(fragment);
+                if (start > -1) {
+                    webView.stopLoading();
+                    final String code = url.substring(start + fragment.length(), url.length());
+                    Log.d("CODE",code);
 
-/*
-        PublicClientApplication myApp = new PublicClientApplication(this.getApplicationContext(),CLIENT_ID);
-        myApp.setValidateAuthority(false);
-
-
-        myApp.acquireToken(this, new String[]{"User.Read"}, new AuthenticationCallback() {
-            @Override
-            public void onSuccess(AuthenticationResult authenticationResult) {
-                Toast.makeText(EliotAuthActivity.this,authenticationResult.getIdToken(),Toast.LENGTH_LONG);
-                String accesstoken = authenticationResult.getAccessToken();
-                Log.d("token",accesstoken);
-            }
-
-            @Override
-            public void onError(MsalException exception) {
-
-            }
-
-            @Override
-            public void onCancel() {
-
+                    dialog = ProgressDialog.show(EliotAuthActivity.this, "Loading","Connecting to Eliot account, please wait...", true);
+                    Thread t = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                token(code);
+                            } catch (MalformedURLException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    t.start();
+                }
             }
         });
-*/
+        webView.loadUrl(URL_AUTH);
+    }
 
+    private void token(String code) throws MalformedURLException {
+        URL url = new URL("https://partners-login.eliotbylegrand.com/token");
+        HttpURLConnection conn;
+        try {
+            String data = "client_id=" + URLEncoder.encode(CLIENT_ID, "UTF-8");
+            data += "&grant_type=" + URLEncoder.encode("authorization_code", "UTF-8");
+            data += "&code=" + URLEncoder.encode(code, "UTF-8");
+            data += "&client_secret=" + URLEncoder.encode(CLIENT_SECRET, "UTF-8");
+            conn = (HttpURLConnection)url.openConnection();
+            conn.setDoOutput(true);
+            OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+            wr.write(data);
+            wr.flush();
+            wr.close();
+            InputStream is = null;
+            try {
+                is = conn.getInputStream();
+            }
+            catch (IOException e) {
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuffer sb = new StringBuffer();
+            String line = null;
+            while((line = reader.readLine()) != null){
+                sb.append(line).append("\n");
+            }
+            reader.close();
+            token = sb.toString();
+            Log.d("D","ATA : " + token);
+        }  catch (IOException e) {
+            e.printStackTrace();
+        }
+        dialog.cancel();
+        Intent intent = new Intent(EliotAuthActivity.this,DevicesActivity.class);
+        intent.putExtra(KEY_CODE,token);
+        startActivity(intent);
     }
 
 }
