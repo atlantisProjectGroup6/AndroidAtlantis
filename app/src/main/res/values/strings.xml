@@ -9,7 +9,7 @@
     <string name="error_invalid_email">Invalid email address</string>
     <string name="error_invalid_auth">Unknown email address or invalid password</string>
     <string name="error_account_creation">The creation of the account failed…</string>
-    <string name="valid_auth">You are now connected…</string>
+    <string name="valid_auth">You are now connected to Eliot</string>
     <string name="error_invalid_password">Password to short (5 chars min)</string>
     <string name="error_field_required">This field is required</string>
     <string name="user_created">User successfully created</string>
