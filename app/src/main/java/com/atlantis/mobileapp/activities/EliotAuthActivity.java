@@ -27,6 +27,7 @@ public class EliotAuthActivity extends AppCompatActivity {
     final static String REDIRECT_URI = "https://login.microsoftonline.com/tfp/oauth2/nativeclient";
     static final String KEY_CODE = "KEY_CODE";
     final static String URL_AUTH = "https://partners-login.eliotbylegrand.com/authorize?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri=" + REDIRECT_URI;
+    //https://partners-login.eliotbylegrand.com/authorize?client_id=358ca400-fdf6-4357-8cca-27caa6699197&response_type=code&redirect_uri=https://login.microsoftonline.com/tfp/oauth2/nativeclient
 
     String token;
     WebView webView;

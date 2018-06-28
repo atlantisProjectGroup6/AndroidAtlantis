@@ -49,14 +49,12 @@
                 android:text="@string/button_day" />
         </LinearLayout>
 
-        <com.jjoe64.graphview.GraphView
+        <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/graphView_graph"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_gravity="center"
-            android:layout_margin="5dp"
-            app:seriesColor="#0008ee"
-            app:seriesType="line" />
+            android:layout_margin="5dp"/>
 
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/graphView_graph2"

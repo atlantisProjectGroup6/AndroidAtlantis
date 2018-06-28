@@ -3,6 +3,7 @@ package com.atlantis.mobileapp.activities;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -14,6 +15,10 @@ import com.atlantis.mobileapp.objects.Device;
 import com.atlantis.mobileapp.objects.SensorType;
 import com.atlantis.mobileapp.utilities.CustomAdapter;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +39,21 @@ public class DevicesActivity extends AppCompatActivity {
         Intent i = getIntent();
         String token = i.getStringExtra(KEY_CODE);
 
-        Toast.makeText(DevicesActivity.this,token,Toast.LENGTH_LONG).show();
         Log.d("access_token",":" + token);
-
+        try {
+            JSONObject JSONToken = new JSONObject(token);
+            String id_token = JSONToken.getString("id_token");
+            String refresh_token = JSONToken.getString("refresh_token");
+            String sub = decoded(id_token);
+            if(sub != null) {
+                int indexSub = sub.indexOf("\"sub\":") + 7;
+                sub = sub.substring(indexSub, indexSub + 36);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         String userId = i.getStringExtra(KEY_USER);
 
         listView_devices = (ListView)findViewById(R.id.listView_devices);
@@ -59,6 +76,20 @@ public class DevicesActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+
+    public static String decoded(String JWTEncoded) throws Exception {
+        try {
+            String[] split = JWTEncoded.split("\\.");
+            return getJson(split[1]);
+        } catch (UnsupportedEncodingException e) {
+        }
+        return null;
+    }
+    private static String getJson(String strEncoded) throws UnsupportedEncodingException{
+        byte[] decodedBytes = Base64.decode(strEncoded, Base64.URL_SAFE);
+        return new String(decodedBytes, "UTF-8");
     }
 
     private List<Device> getUserDevices(String user){

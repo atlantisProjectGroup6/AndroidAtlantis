@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.atlantis.mobileapp.R;
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
@@ -30,7 +31,7 @@ public class DeviceDetailsActivity extends AppCompatActivity {
     public static final String KEY_DEVICE = "KEY_DEVICE";
 
     //UI
-    GraphView graphMetrics;
+    LineChart graphMetrics;
     //GraphView graphCalculated;
     BarChart barChart;
     Button buttonWeek;
@@ -45,7 +46,7 @@ public class DeviceDetailsActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String deviceId = intent.getStringExtra(KEY_DEVICE);
 
-        graphMetrics = (GraphView)findViewById(R.id.graphView_graph);
+        graphMetrics = (LineChart) findViewById(R.id.graphView_graph);
         //TODO get device metrics to draw graphMetrics
         DataPoint[] points = new DataPoint[100];
         for (int i = 0; i < points.length; i++) {
@@ -119,31 +120,6 @@ public class DeviceDetailsActivity extends AppCompatActivity {
     }
 
     private void configureGraphMetrics(DataPoint[] arr){
-        graphMetrics.removeAllSeries();
-        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(arr);
-
-        series.setDrawBackground(true);
-        series.setDrawDataPoints(true);
-
-        /*
-        graphMetrics.getViewport().setYAxisBoundsManual(true);
-        graphMetrics.getViewport().setMinY(0);
-        graphMetrics.getViewport().setMaxY(arr.length);
-        /*graphMetrics.getViewport().setXAxisBoundsManual(true);
-        graphMetrics.getViewport().setMinX(0);
-        graphMetrics.getViewport().setMaxX(50);*/
-
-        //graphMetrics.getViewport().setScalable(true);
-       // graphMetrics.getViewport().setScalableY(trsue);
-
-        //graphMetrics.setTitle("Latest metrics");
-        series.setOnDataPointTapListener(new OnDataPointTapListener() {
-            @Override
-            public void onTap(Series series, DataPointInterface dataPoint) {
-                Toast.makeText(DeviceDetailsActivity.this,Double.toString(dataPoint.getY()),Toast.LENGTH_SHORT).show();
-            }
-        });
-        graphMetrics.addSeries(series);
     }
 
     private void configureGraphCalculated(DataPoint[] arr){
