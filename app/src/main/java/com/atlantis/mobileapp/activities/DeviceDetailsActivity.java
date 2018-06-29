@@ -17,18 +17,21 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.jjoe64.graphview.series.DataPoint;
 
 
 import java.util.ArrayList;
 
 
-public class DeviceDetailsActivity extends AppCompatActivity implements ClientWSCallBack{
+public class DeviceDetailsActivity extends AppCompatActivity implements ClientWSCallBack, OnMapReadyCallback {
 
     public static final String KEY_DEVICEMAC = "KEY_DEVICEMAC";
     public static final String KEY_DEVICENAME = "KEY_DEVICENAME";
     public static final String KEY_DEVICETYPE = "KEY_DEVICETYPE";
+    private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
     private ClientWSSingleton clientWS = null;
 
     //UI
@@ -39,6 +42,7 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     private Button buttonDay;
     private Button buttonMonth;
     private MapView mapView;
+    GoogleMap gmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +61,13 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         buttonDay = (Button)findViewById(R.id.button_day);
         buttonWeek = (Button)findViewById(R.id.button_week);
         buttonMonth = (Button)findViewById(R.id.button_month);
+        Bundle mapViewBundle = null;
+        if (savedInstanceState != null) {
+            mapViewBundle = savedInstanceState.getBundle(MAP_VIEW_BUNDLE_KEY);
+        }
         mapView = (MapView)findViewById(R.id.mapView_deviceGps);
+        mapView.onCreate(mapViewBundle);
+        mapView.getMapAsync(this);
 
         //WS
         clientWS = ClientWSSingleton.getInstance("192.168.0.10:21080", DeviceDetailsActivity.this);
@@ -187,5 +197,27 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     @Override
     public void endGetUserDevices(ArrayList<Device> devices) {
 
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        Bundle mapViewBundle = outState.getBundle(MAP_VIEW_BUNDLE_KEY);
+        if (mapViewBundle == null) {
+            mapViewBundle = new Bundle();
+            outState.putBundle(MAP_VIEW_BUNDLE_KEY, mapViewBundle);
+        }
+
+        mapView.onSaveInstanceState(mapViewBundle);
+    }
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        gmap = googleMap;
+        gmap.setMinZoomPreference(12);
+        //TODO ADD MARKER TO LOCATION
+        //LatLng ny = new LatLng(40.7143528, -74.0059731);
+        //gmap.moveCamera(CameraUpdateFactory.newLatLng(ny));
     }
 }

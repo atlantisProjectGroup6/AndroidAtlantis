@@ -48,6 +48,7 @@ public class ClientWSSingleton{
             JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, urlRequest, json, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
+                    callback.endGetError(response.toString());
                 }
             }, new Response.ErrorListener() {
                 @Override
