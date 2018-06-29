@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.objects.Device;
-import com.atlantis.mobileapp.objects.SensorType;
 
 import java.util.List;
 
@@ -35,7 +34,7 @@ public class CustomAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int i) {
-        return devices.get(i).getId();
+        return i;
     }
 
     @Override
@@ -47,43 +46,41 @@ public class CustomAdapter extends BaseAdapter {
         Device d = devices.get(i);
         textViewName.setText(d.getName());
         textViewMac.setText(d.getMac());
-        SensorType type = d.getType();
+        int type = d.getType();
         switch (type){
-            case LED:
+            case 9:
                 imageViewIcon.setImageResource(R.drawable.ic_led);
                 break;
-            case Beeper:
+            case 10:
                 imageViewIcon.setImageResource(R.drawable.ic_beeper);
                 break;
-            case GPSSensor:
+            case 7:
                 imageViewIcon.setImageResource(R.drawable.ic_gpssensor);
                 break;
-            case LightSensor:
+            case 3:
                 imageViewIcon.setImageResource(R.drawable.ic_lightsensor);
                 break;
-            case CO2LevelSensor:
+            case 8:
                 imageViewIcon.setImageResource(R.drawable.ic_co2levelsensor);
                 break;
-            case HumiditySensor:
+            case 5:
                 imageViewIcon.setImageResource(R.drawable.ic_humiditysensor);
                 break;
-            case PresenceSensor:
+            case 1:
                 imageViewIcon.setImageResource(R.drawable.ic_presencesensor);
                 break;
-            case SoundLevelSensor:
+            case 6:
                 imageViewIcon.setImageResource(R.drawable.ic_soundlevelsensor);
                 break;
-            case TemperatureSensor:
+            case 2:
                 imageViewIcon.setImageResource(R.drawable.ic_temperaturesensor);
                 break;
-            case AtmosphericPressureSensor:
+            case 4:
                 imageViewIcon.setImageResource(R.drawable.ic_pressuremetter);
                 break;
             default:
-                imageViewIcon.setImageResource(R.drawable.ic_launcher_foreground);
                 break;
         }
-        v.setTag(d.getId());
         return v;
     }
 }

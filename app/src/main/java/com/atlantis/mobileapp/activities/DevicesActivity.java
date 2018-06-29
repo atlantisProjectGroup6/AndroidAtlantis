@@ -14,8 +14,9 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.atlantis.mobileapp.R;
+import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
+import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
 import com.atlantis.mobileapp.objects.Device;
-import com.atlantis.mobileapp.objects.SensorType;
 import com.atlantis.mobileapp.utilities.CustomAdapter;
 
 import org.json.JSONObject;
@@ -31,78 +32,73 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.List;
 
-public class DevicesActivity extends AppCompatActivity {
+public class DevicesActivity extends AppCompatActivity implements ClientWSCallBack{
     final static String CLIENT_ID = "358ca400-fdf6-4357-8cca-27caa6699197";
     final static String CLIENT_SECRET = "*d,|`89Jnx/Ea5O8y$T724W4";
     final static String REDIRECT_URI = "https://login.microsoftonline.com/tfp/oauth2/nativeclient";
-    final static String KEY_CODE = "KEY_CODE";
+    final static String PRIVACY = "p=B2C_1_ThirdApp-AccountLinking";
     final static String URL_AUTH = "https://partners-login.eliotbylegrand.com/authorize?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri=" + REDIRECT_URI;
 
-    public static final String KEY_USER = "KEY_USER";
-    public static final String KEY_DEVICE = "KEY_DEVICE";
+    public static final String KEY_DEVICEMAC = "KEY_DEVICEMAC";
+    public static final String KEY_DEVICENAME = "KEY_DEVICENAME";
+    public static final String KEY_DEVICETYPE = "KEY_DEVICETYPE";
     //UI
     ListView listView_devices;
     String token;
     WebView webView;
     ProgressDialog dialog;
 
+    private ClientWSSingleton clientWS = null;
+    private ArrayList<Device> devices;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_devices);
 
-        //Intent i = getIntent();
-        //String token = i.getStringExtra(KEY_CODE);
-
+        //UI INIT
         webView = (WebView) findViewById(R.id.webView_authBis);
         listView_devices = (ListView)findViewById(R.id.listView_devices);
-
-
         webView.setVisibility(View.VISIBLE);
         listView_devices.setVisibility(View.GONE);
 
+        //WEB VIEW LOADING
         webView.getSettings().setJavaScriptEnabled(true);
+        webView.clearCache(true);
+        webView.clearHistory();
+        webView.clearFormData();
+        webView.clearMatches();
+        webView.clearSslPreferences();
         startWebView();
-        Log.d("access_token",":" + token);
-        try {
-            JSONObject jsonObject = new JSONObject(token);
-            String idToken = jsonObject.getString("id_token");
-            String refreshToken = jsonObject.getString("refresh_token");
-            String sub = decoded(idToken);
-            if(sub != null) {
-                int indexSub = sub.indexOf("\"sub\":") + 7;
-                sub = sub.substring(indexSub, indexSub + 36);
-            }
-        } catch (Exception e) {
-            Log.d("Exception", e.getMessage());
-        }
-        //String userId = i.getStringExtra(KEY_USER);
+
+        clientWS = ClientWSSingleton.getInstance("192.168.0.10:21080", DevicesActivity.this);
+        clientWS.callback = this;
+
+        devices = new ArrayList<>();
         //TODO get user devices
-
-        ArrayList<Device> array = new ArrayList<>();
-        array.add(new Device(1,"AA:BB:CC:DD:EE:FF","Pressure captor", SensorType.AtmosphericPressureSensor));
-        array.add(new Device(2,"11:22:33:44:55:66","CO2 Sensor", SensorType.CO2LevelSensor));
-        array.add(new Device(3,"ZZ:BB:ZZ:BB:ZZ:BB","Humidity classroom", SensorType.HumiditySensor));
-        array.add(new Device(4,"OO:BB:OO:OO:EE:OO","Sound level", SensorType.SoundLevelSensor));
-        CustomAdapter customAdapter = new CustomAdapter(this.getApplicationContext(),array);
+        //TODO move
+        //clientWS.getUserDevices(deviceMac);
+        devices.add(new Device("AA:BB:CC:DD:EE:FF","Pressure captor", 4));
+        devices.add(new Device("11:22:33:44:55:66","CO2 Sensor", 8));
+        devices.add(new Device("ZZ:BB:ZZ:BB:ZZ:BB","Humidity classroom", 5));
+        devices.add(new Device("OO:BB:OO:OO:EE:OO","Sound level", 6));
+        devices.add(new Device("OO:BB:OO:OO:EE:OO","GPS", 7));
+        CustomAdapter customAdapter = new CustomAdapter(this.getApplicationContext(),devices);
         listView_devices.setAdapter(customAdapter);
-
         listView_devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Intent intent = new Intent(DevicesActivity.this,DeviceDetailsActivity.class);
-                intent.putExtra(KEY_DEVICE,"");//TODO RECUP ID DEVICE from devicestab (tab.get(i))
+                intent.putExtra(KEY_DEVICEMAC,devices.get(i).getMac());
+                intent.putExtra(KEY_DEVICENAME,devices.get(i).getName());
+                intent.putExtra(KEY_DEVICETYPE,devices.get(i).getType());
                 startActivity(intent);
             }
         });
     }
 
     private void startWebView() {
-        webView.clearCache(true);
-        webView.clearHistory();
-        webView.clearFormData();
         webView.setWebViewClient(new WebViewClient(){
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 String fragment = "?code=";
@@ -110,16 +106,25 @@ public class DevicesActivity extends AppCompatActivity {
                 if (start > -1) {
                     webView.stopLoading();
                     final String code = url.substring(start + fragment.length(), url.length());
-                    Log.d("CODE",code);
-
                     dialog = ProgressDialog.show(DevicesActivity.this, "Loading","Connecting to Eliot account, please wait...", true);
                     Thread t = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 getToken(code);
-                            } catch (MalformedURLException e) {
-                                Log.d("Exception", e.getMessage());
+                                Log.d("access_token",":" + token);
+                                JSONObject jsonObject = new JSONObject(token);
+                                String idToken = jsonObject.getString("access_token");
+                                String refreshToken = jsonObject.getString("profile_info");
+                                String sub = decoded(idToken);
+                                if(sub != null) {
+                                    int indexSub = sub.indexOf("\"sub\":") + 7;
+                                    sub = sub.substring(indexSub, indexSub + 36);
+                                    Log.d("sub",":" + sub);
+                                    clientWS.sendUserId(sub);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
                         }
                     });
@@ -145,34 +150,28 @@ public class DevicesActivity extends AppCompatActivity {
             wr.flush();
             wr.close();
             InputStream is = null;
-            try {
-                is = conn.getInputStream();
-            }
-            catch (IOException e) {
-            }
+            is = conn.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             String line = null;
             while((line = reader.readLine()) != null){
                 sb.append(line).append("\n");
             }
-            reader.close();
             token = sb.toString();
-            Log.d("D","ATA : " + token);
+            reader.close();
         }  catch (IOException e) {
             Log.d("Exception", e.getMessage());
         }
-        dialog.cancel();
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                dialog.setMessage(getString(R.string.dialog_retrieving_devices));
                 webView.setVisibility(View.GONE);
                 listView_devices.setVisibility(View.VISIBLE);
+                dialog.cancel();
             }
         });
-//        Intent intent = new Intent(DevicesActivity.this,DevicesActivity.class);
-//        intent.putExtra(KEY_CODE,token);
-//        startActivity(intent);
     }
 
     public static String decoded(String JWTEncoded) throws Exception {
@@ -180,6 +179,7 @@ public class DevicesActivity extends AppCompatActivity {
             String[] split = JWTEncoded.split("\\.");
             return getJson(split[1]);
         } catch (UnsupportedEncodingException e) {
+            Log.d("Exception", e.getMessage());
         }
         return null;
     }
@@ -188,8 +188,19 @@ public class DevicesActivity extends AppCompatActivity {
         return new String(decodedBytes, "UTF-8");
     }
 
-    private List<Device> getUserDevices(String user){
-        //TODO fonction getUserDevices
-        return null;
+    @Override
+    public void endGetError(String error) {
+
+    }
+
+    @Override
+    public void endGetUserDevices(ArrayList<Device> devices) {
+        devices.clear();
+        this.devices = devices;
+        if(devices.size() == 0){
+            devices.add(new Device("","No devices registered yet",0));
+        }
+        listView_devices.deferNotifyDataSetChanged();
+        dialog.cancel();
     }
 }

@@ -1,7 +1,6 @@
 package com.atlantis.mobileapp.activities;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,26 +11,24 @@ import android.widget.Toast;
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
 import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
+import com.atlantis.mobileapp.objects.Device;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.series.BarGraphSeries;
+import com.google.android.gms.maps.MapView;
 import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.DataPointInterface;
-import com.jjoe64.graphview.series.LineGraphSeries;
-import com.jjoe64.graphview.series.OnDataPointTapListener;
-import com.jjoe64.graphview.series.Series;
+
 
 import java.util.ArrayList;
 
 
 public class DeviceDetailsActivity extends AppCompatActivity implements ClientWSCallBack{
 
-    public static final String KEY_DEVICE = "KEY_DEVICE";
+    public static final String KEY_DEVICEMAC = "KEY_DEVICEMAC";
+    public static final String KEY_DEVICENAME = "KEY_DEVICENAME";
+    public static final String KEY_DEVICETYPE = "KEY_DEVICETYPE";
     private ClientWSSingleton clientWS = null;
 
     //UI
@@ -41,6 +38,7 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     private Button buttonWeek;
     private Button buttonDay;
     private Button buttonMonth;
+    private MapView mapView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,49 +46,44 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         setContentView(R.layout.activity_device_details);
 
         Intent intent = getIntent();
-        String deviceId = intent.getStringExtra(KEY_DEVICE);
+        String deviceMac = intent.getStringExtra(KEY_DEVICEMAC);
+        String deviceName = intent.getStringExtra(KEY_DEVICENAME);
+        int deviceType = intent.getIntExtra(KEY_DEVICETYPE,0);
+        setTitle(deviceName);
 
-        //WS
-        clientWS = ClientWSSingleton.getInstance("api.openweathermap.org/data/2.5", DeviceDetailsActivity.this);
-        clientWS.callback = this;
-        //, -0.577657
-        clientWS.getWeather("Bordeaux");
+        //UI
         graphMetrics = (LineChart) findViewById(R.id.graphView_graph);
-        //TODO get device metrics to draw graphMetrics
-        DataPoint[] points = new DataPoint[100];
-        for (int i = 0; i < points.length; i++) {
-            points[i] = new DataPoint(i, Math.random());
-        }
-        configureGraphMetrics(points);
-
-        //graphCalculated = (GraphView)findViewById(R.id.graphView_graph2);
-        //TODO get device calculation to draw graphCalculated
-        //        DataPoint[] calc = new DataPoint[3];
-        //        calc[0] = new DataPoint(1,18);
-        //        calc[1] = new DataPoint(2,25);
-        //        calc[2] = new DataPoint(3,36);
-        //        configureGraphCalculated(calc);
         barChart = (BarChart)findViewById(R.id.graphView_graph2);
-        ArrayList<BarEntry> entries = new ArrayList<>();
-        entries.add(new BarEntry(0,18f));
-        entries.add(new BarEntry(1,25f));
-        entries.add(new BarEntry(2,36f));
-        BarDataSet set = new BarDataSet(entries,"Temperature");
-        ArrayList<String> dates = new ArrayList<>();
-        dates.add("Minimum");
-        dates.add("Average");
-        dates.add("Maximum");
-        BarDataSet set2 = new BarDataSet(entries,"Dates");
-
-        BarData data = new BarData(set);
-        BarData d = new BarData(set,set2);
-        barChart.setData(d);
-        barChart.setTouchEnabled(false);
-
-
         buttonDay = (Button)findViewById(R.id.button_day);
         buttonWeek = (Button)findViewById(R.id.button_week);
         buttonMonth = (Button)findViewById(R.id.button_month);
+        mapView = (MapView)findViewById(R.id.mapView_deviceGps);
+
+        //WS
+        clientWS = ClientWSSingleton.getInstance("192.168.0.10:21080", DeviceDetailsActivity.this);
+        clientWS.callback = this;
+
+        if(deviceType > 0 && deviceType < 9)
+        {
+            if(deviceType != 7){
+
+                graphMetrics.setVisibility(View.VISIBLE);
+                barChart.setVisibility(View.VISIBLE);
+                buttonDay.setVisibility(View.VISIBLE);
+                buttonWeek.setVisibility(View.VISIBLE);
+                buttonMonth.setVisibility(View.VISIBLE);
+                mapView.setVisibility(View.GONE);
+                setupGraphs();
+            }else{
+                graphMetrics.setVisibility(View.GONE);
+                barChart.setVisibility(View.GONE);
+                buttonDay.setVisibility(View.GONE);
+                buttonWeek.setVisibility(View.GONE);
+                buttonMonth.setVisibility(View.GONE);
+                mapView.setVisibility(View.VISIBLE);
+                setupMap();
+            }
+        }
 
         ///region button listener
         buttonDay.setOnClickListener(new View.OnClickListener() {
@@ -128,6 +121,44 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         });
     }
 
+    private void setupMap() {
+        //TODO CODE MAP LOGIC
+    }
+
+    private void setupGraphs() {
+        //TODO get device metrics to draw graphMetrics
+
+        DataPoint[] points = new DataPoint[100];
+        for (int i = 0; i < points.length; i++) {
+            points[i] = new DataPoint(i, Math.random());
+        }
+        configureGraphMetrics(points);
+
+        //graphCalculated = (GraphView)findViewById(R.id.graphView_graph2);
+        //TODO get device calculation to draw graphCalculated
+        //        DataPoint[] calc = new DataPoint[3];
+        //        calc[0] = new DataPoint(1,18);
+        //        calc[1] = new DataPoint(2,25);
+        //        calc[2] = new DataPoint(3,36);
+        //        configureGraphCalculated(calc);
+
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        entries.add(new BarEntry(0,18f));
+        entries.add(new BarEntry(1,25f));
+        entries.add(new BarEntry(2,36f));
+        BarDataSet set = new BarDataSet(entries,"Temperature");
+        ArrayList<String> dates = new ArrayList<>();
+        dates.add("Minimum");
+        dates.add("Average");
+        dates.add("Maximum");
+        BarDataSet set2 = new BarDataSet(entries,"Dates");
+
+        BarData data = new BarData(set);
+        BarData d = new BarData(set,set2);
+        barChart.setData(d);
+        barChart.setTouchEnabled(false);
+    }
+
     private void configureGraphMetrics(DataPoint[] arr){
     }
 
@@ -149,13 +180,12 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     }
 
     @Override
-    public void endGetWeather(String name, String main, String description) {
-        TextView textView = (TextView) findViewById(R.id.textView_temp);
-        textView.setText(String.format("%s : %s (%s).", name, main, description));
+    public void endGetError(String error) {
+        Toast.makeText(DeviceDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void endGetError(String error) {
-        Toast.makeText(DeviceDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
+    public void endGetUserDevices(ArrayList<Device> devices) {
+
     }
 }

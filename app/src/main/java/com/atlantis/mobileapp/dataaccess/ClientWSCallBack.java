@@ -1,6 +1,10 @@
 package com.atlantis.mobileapp.dataaccess;
 
+import com.atlantis.mobileapp.objects.Device;
+
+import java.util.ArrayList;
+
 public interface ClientWSCallBack {
-    void endGetWeather(String name,String main,String description);
     void endGetError(String error);
+    void endGetUserDevices(ArrayList<Device> devices);
 }

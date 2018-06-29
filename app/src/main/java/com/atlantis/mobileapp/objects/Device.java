@@ -2,13 +2,11 @@ package com.atlantis.mobileapp.objects;
 
 public class Device {
 
-    private int id;
     private String mac;
     private String name;
-    private SensorType type;
+    private int type;
 
-    public Device(int id, String mac, String name, SensorType type){
-        this.id = id;
+    public Device(String mac, String name, int type){
         this.mac = mac;
         this.name = name;
         this.type = type;
@@ -22,22 +20,16 @@ public class Device {
         this.name = name;
     }
 
-    public int getId() {
-        return id;
-    }
-    public void setId(int id) {
-        this.id = id;
-    }
     public String getMac() {
         return mac;
     }
     public void setMac(String mac) {
         this.mac = mac;
     }
-    public SensorType getType() {
+    public int getType() {
         return type;
     }
-    public void setType(SensorType type) {
+    public void setType(int type) {
         this.type = type;
     }
 }
