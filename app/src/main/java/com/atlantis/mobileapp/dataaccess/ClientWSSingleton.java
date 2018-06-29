@@ -21,7 +21,7 @@ import org.json.JSONObject;
 
 import javax.security.auth.callback.Callback;
 
-public class ClientWSSingleton extends Application{
+public class ClientWSSingleton{
     private static ClientWSSingleton Instance = null;
     private RequestQueue requestQueue;
     private static Context context;
@@ -39,12 +39,6 @@ public class ClientWSSingleton extends Application{
         if(Instance == null)
             Instance = new ClientWSSingleton(url,context);
         return Instance;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Instance = this;
     }
 
     public RequestQueue getRequestQueue() {
@@ -72,21 +66,21 @@ public class ClientWSSingleton extends Application{
                                 callback.endGetWeather(name, main, description);
                         } catch (Exception e) {
                             if (callback != null)
-                                callback.endGetError(getString(R.string.error_get_webservice));
+                                callback.endGetError("Failed to get data from web service…");
                         }
                     }
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         if (callback != null)
-                            callback.endGetError(getString(R.string.error_get_webservice));
+                            callback.endGetError("Failed to get data from web service…");
                     }
                 }
             );
             getRequestQueue().add(request);
         } catch (Exception e) {
             if (callback != null)
-                callback.endGetError(getString(R.string.error_get_webservice));
+                callback.endGetError("Failed to get data from web service…");
         }
     }
 
