@@ -40,6 +40,11 @@ public class EliotAuthActivity extends AppCompatActivity {
 
         webView = (WebView) findViewById(R.id.webView_auth);
         webView.getSettings().setJavaScriptEnabled(true);
+        startWebView();
+
+    }
+
+    private void startWebView() {
         webView.setWebViewClient(new WebViewClient(){
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 String fragment = "?code=";
@@ -54,9 +59,9 @@ public class EliotAuthActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             try {
-                                token(code);
+                                getToken(code);
                             } catch (MalformedURLException e) {
-                                e.printStackTrace();
+                                Log.d("Exception", e.getMessage());
                             }
                         }
                     });
@@ -67,7 +72,7 @@ public class EliotAuthActivity extends AppCompatActivity {
         webView.loadUrl(URL_AUTH);
     }
 
-    private void token(String code) throws MalformedURLException {
+    private void getToken(String code) throws MalformedURLException {
         URL url = new URL("https://partners-login.eliotbylegrand.com/token");
         HttpURLConnection conn;
         try {
@@ -97,12 +102,18 @@ public class EliotAuthActivity extends AppCompatActivity {
             token = sb.toString();
             Log.d("D","ATA : " + token);
         }  catch (IOException e) {
-            e.printStackTrace();
+            Log.d("Exception", e.getMessage());
         }
         dialog.cancel();
         Intent intent = new Intent(EliotAuthActivity.this,DevicesActivity.class);
         intent.putExtra(KEY_CODE,token);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
     }
 
 }

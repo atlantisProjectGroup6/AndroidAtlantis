@@ -8,14 +8,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.objects.Device;
 import com.atlantis.mobileapp.objects.SensorType;
 import com.atlantis.mobileapp.utilities.CustomAdapter;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -41,18 +39,16 @@ public class DevicesActivity extends AppCompatActivity {
 
         Log.d("access_token",":" + token);
         try {
-            JSONObject JSONToken = new JSONObject(token);
-            String id_token = JSONToken.getString("id_token");
-            String refresh_token = JSONToken.getString("refresh_token");
-            String sub = decoded(id_token);
+            JSONObject jsonObject = new JSONObject(token);
+            String idToken = jsonObject.getString("id_token");
+            String refreshToken = jsonObject.getString("refresh_token");
+            String sub = decoded(idToken);
             if(sub != null) {
                 int indexSub = sub.indexOf("\"sub\":") + 7;
                 sub = sub.substring(indexSub, indexSub + 36);
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.d("Exception", e.getMessage());
         }
         String userId = i.getStringExtra(KEY_USER);
 

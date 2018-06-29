@@ -6,9 +6,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.atlantis.mobileapp.R;
+import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
+import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.BarData;
@@ -26,17 +29,18 @@ import com.jjoe64.graphview.series.Series;
 import java.util.ArrayList;
 
 
-public class DeviceDetailsActivity extends AppCompatActivity {
+public class DeviceDetailsActivity extends AppCompatActivity implements ClientWSCallBack{
 
     public static final String KEY_DEVICE = "KEY_DEVICE";
+    private ClientWSSingleton clientWS = null;
 
     //UI
-    LineChart graphMetrics;
+    private LineChart graphMetrics;
     //GraphView graphCalculated;
-    BarChart barChart;
-    Button buttonWeek;
-    Button buttonDay;
-    Button buttonMonth;
+    private BarChart barChart;
+    private Button buttonWeek;
+    private Button buttonDay;
+    private Button buttonMonth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +50,11 @@ public class DeviceDetailsActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String deviceId = intent.getStringExtra(KEY_DEVICE);
 
+        //WS
+        clientWS = ClientWSSingleton.getInstance("api.openweathermap.org/data/2.5", DeviceDetailsActivity.this);
+        clientWS.callback = this;
+        //, -0.577657
+        clientWS.getWeather("Bordeaux");
         graphMetrics = (LineChart) findViewById(R.id.graphView_graph);
         //TODO get device metrics to draw graphMetrics
         DataPoint[] points = new DataPoint[100];
@@ -55,7 +64,7 @@ public class DeviceDetailsActivity extends AppCompatActivity {
         configureGraphMetrics(points);
 
         //graphCalculated = (GraphView)findViewById(R.id.graphView_graph2);
-        //        //TODO get device calculation to draw graphCalculated
+        //TODO get device calculation to draw graphCalculated
         //        DataPoint[] calc = new DataPoint[3];
         //        calc[0] = new DataPoint(1,18);
         //        calc[1] = new DataPoint(2,25);
@@ -135,6 +144,18 @@ public class DeviceDetailsActivity extends AppCompatActivity {
         graphCalculated.getViewport();
         graphCalculated.getViewport().setXAxisBoundsManual(true);
         graphCalculated.getViewport().setMinX(0);
-        graphCalculated.getViewport().setMaxX(4);*/
+        graphCalculated.getViewport().setMaxX(4);
+        */
+    }
+
+    @Override
+    public void endGetWeather(String name, String main, String description) {
+        TextView textView = (TextView) findViewById(R.id.textView_temp);
+        textView.setText(String.format("%s : %s (%s).", name, main, description));
+    }
+
+    @Override
+    public void endGetError(String error) {
+        Toast.makeText(DeviceDetailsActivity.this, error, Toast.LENGTH_SHORT).show();
     }
 }
