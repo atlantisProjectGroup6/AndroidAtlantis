@@ -7,6 +7,7 @@
     <string name="button_month">Month</string>
     <string name="error_get_webservice">Failed to get data from web service…</string>
     <string name="dialog_retrieving_devices">Retrieving devices...</string>
+    <string name="listview_no_devices">No devices registered yet</string>
 
 
 </resources>

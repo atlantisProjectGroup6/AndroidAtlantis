@@ -1,6 +1,9 @@
 package com.atlantis.mobileapp.activities;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
@@ -11,12 +14,17 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
 import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
 import com.atlantis.mobileapp.objects.Device;
+import com.atlantis.mobileapp.objects.Metrics;
+import com.atlantis.mobileapp.utilities.Consts;
 import com.atlantis.mobileapp.utilities.CustomAdapter;
 
 import org.json.JSONObject;
@@ -49,8 +57,11 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
     WebView webView;
     ProgressDialog dialog;
 
+    String sub;
+
     private ClientWSSingleton clientWS = null;
     private ArrayList<Device> devices;
+    CustomAdapter customAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +74,23 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
         webView.setVisibility(View.VISIBLE);
         listView_devices.setVisibility(View.GONE);
 
+        devices = new ArrayList<>();
+
+        //customAdapter = new CustomAdapter(this.getApplicationContext(),devices);
+        //listView_devices.setAdapter(customAdapter);
+        listView_devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if(!devices.get(i).getName().equals(getString(R.string.listview_no_devices))) {
+                    Intent intent = new Intent(DevicesActivity.this, DeviceDetailsActivity.class);
+                    intent.putExtra(KEY_DEVICEMAC, devices.get(i).getMac());
+                    intent.putExtra(KEY_DEVICENAME, devices.get(i).getName());
+                    intent.putExtra(KEY_DEVICETYPE, devices.get(i).getType());
+                    startActivity(intent);
+                }
+            }
+        });
+
         //WEB VIEW LOADING
         webView.getSettings().setJavaScriptEnabled(true);
         webView.clearCache(true);
@@ -72,30 +100,8 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
         webView.clearSslPreferences();
         startWebView();
 
-        clientWS = ClientWSSingleton.getInstance("192.168.0.10:21080", DevicesActivity.this);
+        clientWS = ClientWSSingleton.getInstance(Consts.serverUrl, DevicesActivity.this);
         clientWS.callback = this;
-
-        devices = new ArrayList<>();
-        //TODO get user devices
-        //TODO move
-        //clientWS.getUserDevices(deviceMac);
-        devices.add(new Device("AA:BB:CC:DD:EE:FF","Pressure captor", 4));
-        devices.add(new Device("11:22:33:44:55:66","CO2 Sensor", 8));
-        devices.add(new Device("ZZ:BB:ZZ:BB:ZZ:BB","Humidity classroom", 5));
-        devices.add(new Device("OO:BB:OO:OO:EE:OO","Sound level", 6));
-        devices.add(new Device("OO:BB:OO:OO:EE:OO","GPS", 7));
-        CustomAdapter customAdapter = new CustomAdapter(this.getApplicationContext(),devices);
-        listView_devices.setAdapter(customAdapter);
-        listView_devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent intent = new Intent(DevicesActivity.this,DeviceDetailsActivity.class);
-                intent.putExtra(KEY_DEVICEMAC,devices.get(i).getMac());
-                intent.putExtra(KEY_DEVICENAME,devices.get(i).getName());
-                intent.putExtra(KEY_DEVICETYPE,devices.get(i).getType());
-                startActivity(intent);
-            }
-        });
     }
 
     private void startWebView() {
@@ -116,12 +122,13 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
                                 JSONObject jsonObject = new JSONObject(token);
                                 String idToken = jsonObject.getString("access_token");
                                 String refreshToken = jsonObject.getString("profile_info");
-                                String sub = decoded(idToken);
+                                sub = decoded(idToken);
                                 if(sub != null) {
                                     int indexSub = sub.indexOf("\"sub\":") + 7;
                                     sub = sub.substring(indexSub, indexSub + 36);
                                     Log.d("sub",":" + sub);
                                     clientWS.sendUserId(sub);
+                                    //clientWS.getUserDevices(sub);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -190,17 +197,60 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
 
     @Override
     public void endGetError(String error) {
-
+        Log.d("error", error);
     }
 
     @Override
-    public void endGetUserDevices(ArrayList<Device> devices) {
-        devices.clear();
-        this.devices = devices;
-        if(devices.size() == 0){
-            devices.add(new Device("","No devices registered yet",0));
+    public void endSendUserId(String s) {
+        Log.d("sendUserId", "Done");
+        if(s.equals("true")){
+            String name;
+            AlertDialog.Builder dial = new AlertDialog.Builder(DevicesActivity.this);
+            final EditText input = new EditText(DevicesActivity.this);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            input.setLayoutParams(lp);
+            dial.setView(input);
+            dial.setTitle("What's your name ?");
+            dial.setMessage("Enter your name to associate your account with : ");
+            dial.setCancelable(false);
+            dial.setPositiveButton("Validate", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    Log.d("UserName",input.getText().toString());
+                    clientWS.sendUserName(input.getText().toString(),sub);
+                    dialog.show();
+                }
+            });
+            dialog.hide();
+            dial.show();
+        }else{
+            clientWS.getUserDevices(sub);
         }
-        listView_devices.deferNotifyDataSetChanged();
+        //Thread.sleep(5000);
+    }
+
+    @Override
+    public void endSendUserName(String response) {
+        Log.d("sendUserName", "Done");
+        clientWS.getUserDevices(sub);
+    }
+
+    @Override
+    public void endGetUserDevices(ArrayList<Device> devs) {
+        Log.d("getUserDevices", "Done");
+        if(devs.size() == 0){
+            devs.add(new Device("",getString(R.string.listview_no_devices),0));
+        }
+        customAdapter = new CustomAdapter(DevicesActivity.this,devs);
+        listView_devices.setAdapter(customAdapter);
+        devices = new ArrayList<>(devs);
         dialog.cancel();
     }
+
+    @Override
+    public void endGetLatestMetrics(ArrayList<Metrics> metrics) {
+
+    }
+
+    //TODO TEST ONRESUME WEBVIEW.CLEARHISTORY ETC....
 }

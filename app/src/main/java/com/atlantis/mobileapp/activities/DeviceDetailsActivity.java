@@ -3,6 +3,7 @@ package com.atlantis.mobileapp.activities;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,6 +13,8 @@ import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
 import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
 import com.atlantis.mobileapp.objects.Device;
+import com.atlantis.mobileapp.objects.Metrics;
+import com.atlantis.mobileapp.utilities.Consts;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.BarData;
@@ -32,7 +35,6 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     public static final String KEY_DEVICENAME = "KEY_DEVICENAME";
     public static final String KEY_DEVICETYPE = "KEY_DEVICETYPE";
     private static final String MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey";
-    private ClientWSSingleton clientWS = null;
 
     //UI
     private LineChart graphMetrics;
@@ -43,6 +45,9 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     private Button buttonMonth;
     private MapView mapView;
     GoogleMap gmap;
+
+    private ClientWSSingleton clientWS = null;
+    private ArrayList<Metrics> metrics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +75,7 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         mapView.getMapAsync(this);
 
         //WS
-        clientWS = ClientWSSingleton.getInstance("192.168.0.10:21080", DeviceDetailsActivity.this);
+        clientWS = ClientWSSingleton.getInstance(Consts.serverUrl, DeviceDetailsActivity.this);
         clientWS.callback = this;
 
         if(deviceType > 0 && deviceType < 9)
@@ -94,6 +99,8 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
                 setupMap();
             }
         }
+
+        clientWS.getLatestMetrics(deviceMac,0);
 
         ///region button listener
         buttonDay.setOnClickListener(new View.OnClickListener() {
@@ -195,8 +202,24 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     }
 
     @Override
+    public void endSendUserId(String s) {
+
+    }
+
+    @Override
+    public void endSendUserName(String response) {
+
+    }
+
+    @Override
     public void endGetUserDevices(ArrayList<Device> devices) {
 
+    }
+
+    @Override
+    public void endGetLatestMetrics(ArrayList<Metrics> mets) {
+        Log.d("getLatestMetrics", "Done");
+        //TODO USE METRICS FOR GRAPHS
     }
 
 
@@ -212,6 +235,7 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
 
         mapView.onSaveInstanceState(mapViewBundle);
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         gmap = googleMap;
