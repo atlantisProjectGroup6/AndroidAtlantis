@@ -67,6 +67,7 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_devices);
+        setTitle("Your devices");
 
         //UI INIT
         webView = (WebView) findViewById(R.id.webView_authBis);
@@ -74,10 +75,6 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
         webView.setVisibility(View.VISIBLE);
         listView_devices.setVisibility(View.GONE);
 
-        devices = new ArrayList<>();
-
-        //customAdapter = new CustomAdapter(this.getApplicationContext(),devices);
-        //listView_devices.setAdapter(customAdapter);
         listView_devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -100,7 +97,7 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
         webView.clearSslPreferences();
         startWebView();
 
-        clientWS = ClientWSSingleton.getInstance(Consts.serverUrl, DevicesActivity.this);
+        clientWS = ClientWSSingleton.getInstance(Consts.serverUrlJee, Consts.serverUrlNet, DevicesActivity.this);
         clientWS.callback = this;
     }
 
@@ -249,6 +246,21 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
 
     @Override
     public void endGetLatestMetrics(ArrayList<Metrics> metrics) {
+
+    }
+
+    @Override
+    public void endGetCalculatedMetrics(ArrayList<Metrics> metrics) {
+
+    }
+
+    @Override
+    public void endSendCommand(String response) {
+
+    }
+
+    @Override
+    public void endGetCommand(String resp) {
 
     }
 

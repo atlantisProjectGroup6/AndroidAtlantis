@@ -8,6 +8,8 @@
     <string name="error_get_webservice">Failed to get data from web service…</string>
     <string name="dialog_retrieving_devices">Retrieving devices...</string>
     <string name="listview_no_devices">No devices registered yet</string>
+    <string name="presence_true">Somebody is detected by the sensor</string>
+    <string name="presence_false">No one detected</string>
 
 
 </resources>

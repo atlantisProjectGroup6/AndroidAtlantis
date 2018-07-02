@@ -10,6 +10,45 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageView_commandIcon"
+            android:layout_width="match_parent"
+            android:layout_height="297dp"
+            android:layout_margin="10dp"
+            android:padding="0dp"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/ic_led" />
+
+        <Switch
+            android:id="@+id/switch_lightLed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+            android:text="Turn on/off the LED"
+            android:textAlignment="viewEnd"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/textView_presence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:gravity="center"
+            android:text="TextView" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -19,9 +58,7 @@
         <com.google.android.gms.maps.MapView
             android:id="@+id/mapView_deviceGps"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="5dp" />
+            android:layout_height="match_parent" />
     </LinearLayout>
 
     <LinearLayout
@@ -38,47 +75,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/button_month"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/button_month" />
-
-            <Button
-                android:id="@+id/button_week"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/button_week" />
-
-            <Button
-                android:id="@+id/button_day"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/button_day" />
-        </LinearLayout>
-
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/graphView_graph"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="220dp"
             android:layout_gravity="center"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp" />
 
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/graphView_graph2"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="220dp"
             android:layout_gravity="center"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp" />
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
