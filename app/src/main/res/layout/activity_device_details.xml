@@ -42,7 +42,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
             android:gravity="center"
-            android:text="TextView" />
+            android:text="Retrieving status..." />
     </LinearLayout>
 
     <LinearLayout
@@ -78,16 +78,20 @@
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/graphView_graph"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_margin="5dp" />
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1" />
 
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/graphView_graph2"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_margin="5dp" />
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1" />
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

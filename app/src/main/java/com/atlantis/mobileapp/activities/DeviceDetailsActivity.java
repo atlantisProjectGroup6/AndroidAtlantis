@@ -15,9 +15,9 @@ import android.widget.Toast;
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
 import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
+import com.atlantis.mobileapp.objects.CalcMetrics;
 import com.atlantis.mobileapp.objects.Device;
 import com.atlantis.mobileapp.objects.Metrics;
-import com.atlantis.mobileapp.utilities.Consts;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
@@ -31,20 +31,26 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import org.w3c.dom.Text;
-
+import java.net.CacheRequest;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DeviceDetailsActivity extends AppCompatActivity implements ClientWSCallBack, OnMapReadyCallback {
 
@@ -60,11 +66,17 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     private Switch aSwitch;
     private TextView textView;
 
-    private ArrayList<Metrics> metrics;
+    //WS
     private ClientWSSingleton clientWS;
+
+    //Misc
+    private ArrayList<Metrics> metrics;
     private String deviceName;
     private String deviceMac;
     private int deviceType;
+    private boolean ready;
+    private GoogleMap googleMap;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,19 +89,19 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         setTitle(deviceName);
 
         //UI
-        graphMetrics = (LineChart) findViewById(R.id.graphView_graph);
-        barChart = (BarChart) findViewById(R.id.graphView_graph2);
-        mapView = (MapView) findViewById(R.id.mapView_deviceGps);
+        graphMetrics = findViewById(R.id.graphView_graph);
+        barChart = findViewById(R.id.graphView_graph2);
+        mapView = findViewById(R.id.mapView_deviceGps);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
-        imageView = (ImageView)findViewById(R.id.imageView_commandIcon);
-        aSwitch = (Switch)findViewById(R.id.switch_lightLed);
-        textView = (TextView)findViewById(R.id.textView_presence);
+        imageView = findViewById(R.id.imageView_commandIcon);
+        aSwitch = findViewById(R.id.switch_lightLed);
+        textView = findViewById(R.id.textView_presence);
 
         //WS
         clientWS = ClientWSSingleton.getInstance(Consts.serverUrlJee, Consts.serverUrlNet, DeviceDetailsActivity.this);
         clientWS.callback = this;
-        metrics = new ArrayList<Metrics>();
+        metrics = new ArrayList<>();
 
         switch (deviceType){
             case 3:
@@ -137,17 +149,24 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
                 imageView.setVisibility(View.GONE);
                 aSwitch.setVisibility(View.GONE);
                 textView.setVisibility(View.GONE);
+                ready = false;
                 break;
             default:
                 break;
         }
 
-        if(deviceType < 9)
-            clientWS.getLatestMetrics(deviceMac,0);
+        if(deviceType < 9) {
+            clientWS.getLatestMetrics(deviceMac, "month");
+        }
+        //TODO DECOMMENT THIS WHEN AVAILABLE ON WS
+        if(deviceType != 7 && deviceType > 1 && deviceType < 9)
+            clientWS.getCalculatedMetrics(deviceMac);
+        else
+            barChart.setVisibility(View.GONE);
 
     }
 
-    private void configureGraphMetrics(ArrayList<Metrics> mets){
+    private void configureGraphMetrics(ArrayList<Metrics> mets) throws ParseException {
         Description description = new Description();
         String desc = "Raw data";
         switch (deviceType){
@@ -172,25 +191,26 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
             default:
                 break;
         }
+        description.setText(desc);
         graphMetrics.setDescription(description);
         graphMetrics.setDragXEnabled(true);
         graphMetrics.setDragYEnabled(false);
         graphMetrics.setScaleXEnabled(true);
         graphMetrics.setScaleYEnabled(false);
 
-        mets.sort(new Comparator<Metrics>() {
-            @Override
-            public int compare(Metrics metrics, Metrics t1) {
-                return metrics.getDate() == t1.getDate() ? 1:0;
-            }
-        });
 
-        SimpleDateFormat formatter = new SimpleDateFormat("hh:mm");
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM", Locale.FRANCE);
         final List<Entry> entries = new ArrayList<>();
         final List<String> labels = new ArrayList<>();
-        for(int i = 0; i < mets.size(); i++){
-            entries.add(new Entry(i,Float.parseFloat(mets.get(i).getValue())));
-            labels.add(formatter.format(new Date(mets.get(i).getDate())));
+        NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
+        Calendar c = Calendar.getInstance();
+        int imax = (mets.size()<20 ? mets.size():20);
+        for(int i = 0; i < imax; i++){
+            entries.add(new Entry(i,format.parse(mets.get(imax-i).getValue()).floatValue()));
+            c.setTimeInMillis(mets.get(imax-i).getDate()*1000);
+            Date d = c.getTime();
+            labels.add(formatter.format(d));
         }
         LineDataSet lineDataSet = new LineDataSet(entries, "Latest metrics recovered");
         lineDataSet.setDrawFilled(true);
@@ -223,7 +243,7 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         graphMetrics.invalidate();
     }
 
-    private void configureGraphCalculated(ArrayList<Metrics> mets){
+    private void configureGraphCalculated(CalcMetrics calcMets){
 
         Description description = new Description();
         String desc = "Calculated data";
@@ -249,26 +269,25 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
             default:
                 break;
         }
+        description.setText(desc);
         barChart.setDescription(description);
-        barChart.setDragEnabled(false);
-        barChart.setScaleEnabled(false);
         //DATA
         final List<BarEntry> entries7Days = new ArrayList<>();
-        entries7Days.add(new BarEntry(1,4));
-        entries7Days.add(new BarEntry(4, 8));
-        entries7Days.add(new BarEntry(7, 10));
         final List<BarEntry> entries14Days = new ArrayList<>();
-        entries14Days.add(new BarEntry(2,3));
-        entries14Days.add(new BarEntry(5, 9));
-        entries14Days.add(new BarEntry(8, 12));
         final List<BarEntry> entries31Days = new ArrayList<>();
-        entries31Days.add(new BarEntry(3,0));
-        entries31Days.add(new BarEntry(6, 7));
-        entries31Days.add(new BarEntry(9, 12));
+
+        entries7Days.add(new BarEntry(1, calcMets.getDayMin()));
+        entries7Days.add(new BarEntry(4, calcMets.getDayAvg()));
+        entries7Days.add(new BarEntry(7, calcMets.getDayMax()));
+        entries14Days.add(new BarEntry(2, calcMets.getWeekMin()));
+        entries14Days.add(new BarEntry(5, calcMets.getWeekAvg()));
+        entries14Days.add(new BarEntry(8, calcMets.getWeekMax()));
+        entries31Days.add(new BarEntry(3, calcMets.getMonthMin()));
+        entries31Days.add(new BarEntry(6, calcMets.getMonthAvg()));
+        entries31Days.add(new BarEntry(9, calcMets.getMonthMax()));
 
         //X AXIS
         final List<String> labels = new ArrayList<>();
-        //TODO FILL LABELS WITH DATE
         labels.add("Minimums");
         labels.add("Averages");
         labels.add("Maximums");
@@ -288,19 +307,17 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
 
         barChart.setData(barData);
         XAxis xAxis = barChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setPosition(XAxis.XAxisPosition.TOP);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter(new IAxisValueFormatter() {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                for (Entry e:entries7Days) {
-                    if(value > 1.4 && value < 1.6)
-                        return labels.get(0);
-                    if(value > 4.7 && value < 4.8)
-                        return labels.get(1);
-                    if(value > 7.9 && value < 8.1)
-                        return labels.get(2);
-                }
+                if(value > 1.4 && value < 1.6)
+                    return labels.get(0);
+                if(value > 4.7 && value < 4.8)
+                    return labels.get(1);
+                if(value > 7.9 && value < 8.1)
+                    return labels.get(2);
                 return "";
             }
         });
@@ -309,13 +326,12 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
         xAxis.setLabelCount(21,true);
         barChart.getAxisLeft().setSpaceBottom(0);
         barChart.getAxisRight().setEnabled(false);
-
-
-
         barChart.getBarData().setValueTextSize(12f);
         barChart.getBarData().setValueTextColor(Color.BLACK);
         barChart.groupBars(0,0.45f,0.05f);
         barChart.setTouchEnabled(false);
+        barChart.setDragEnabled(false);
+        barChart.setScaleEnabled(false);
         barChart.animateY(2000);
         barChart.invalidate();
     }
@@ -343,14 +359,41 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     @Override
     public void endGetLatestMetrics(ArrayList<Metrics> mets) {
         Log.d("getLatestMetrics", "Done");
-        if(deviceType != 1)
-            configureGraphMetrics(mets);
-        else
-            configurePresenceData(mets);
+        try {
+            if(deviceType == 7)
+                configureMap(mets);
+            if(deviceType == 1)
+                configurePresenceData(mets);
+            else
+                configureGraphMetrics(mets);
+        }catch(Exception e) {
+            Log.d("Exception : ", e.getMessage());
+        }
+    }
+
+    private void configureMap(ArrayList<Metrics> mets) {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm", Locale.FRANCE);
+        ArrayList<MarkerOptions> markers = new ArrayList<>();
+        for(int i = 0; i < (mets.size() < 11 ? mets.size():11); i++){
+            if(mets.size() == 0){
+                Toast.makeText(DeviceDetailsActivity.this,"No localization data",Toast.LENGTH_LONG).show();
+            }else {
+                double[] lats = convert(mets.get(i).getValue());
+                markers.add(new MarkerOptions().position(new LatLng(lats[0], lats[1])).title(formatter.format(new Date(mets.get(i).getDate()*1000))));
+            }
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            for (MarkerOptions marker : markers) {
+                googleMap.addMarker(marker);
+                builder.include(marker.getPosition());
+            }
+            LatLngBounds bounds = builder.build();
+            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, 100);
+            googleMap.animateCamera(cu);
+        }
     }
 
     private void configurePresenceData(ArrayList<Metrics> mets) {
-        if(mets.get(mets.size()-1).getValue().equals("true")) {
+        if(mets.get(0).getValue().equals("true")) {
             imageView.setColorFilter(Color.GREEN);
             textView.setText(R.string.presence_true);
         }
@@ -361,9 +404,9 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
     }
 
     @Override
-    public void endGetCalculatedMetrics(ArrayList<Metrics> metrics) {
+    public void endGetCalculatedMetrics(CalcMetrics calcMetrics) {
         Log.d("getCalculatedMetrics", "Done");
-        //TODO CALL CONFIGURECALCGRAPH
+        configureGraphCalculated(calcMetrics);
     }
 
     @Override
@@ -400,15 +443,7 @@ public class DeviceDetailsActivity extends AppCompatActivity implements ClientWS
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Metrics current;
-        if(metrics == null || metrics.size() == 0){
-            current = new Metrics(1,"4451540612N,0034387912W",1532659887);
-        }else {
-            current = metrics.get(metrics.size() - 1);
-        }
-        double[] lats = convert(current.getValue());
-        googleMap.addMarker(new MarkerOptions().position(new LatLng(lats[0], lats[1])).title(deviceName));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lats[0], lats[1]),15));
+        this.googleMap = googleMap;
     }
     public double[] convert(String latlon){
         String[] parts = latlon.split(",");

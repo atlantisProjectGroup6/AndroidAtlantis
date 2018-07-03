@@ -9,9 +9,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.atlantis.mobileapp.objects.CalcMetrics;
 import com.atlantis.mobileapp.objects.Device;
 import com.atlantis.mobileapp.objects.Metrics;
-import com.atlantis.mobileapp.utilities.Consts;
+import com.atlantis.mobileapp.activities.Consts;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -180,26 +181,27 @@ public class ClientWSSingleton{
         }
     }
 
-    public void getLatestMetrics(String deviceMac, long timestamp) {
+    public void getCalculatedMetrics(String deviceMac) {
         try {
-            String urlRequest = "http://" + getUrlJee() + ":" + getPortJee() + "/AtlantisJavaEE-war/services/mobile/latestMetrics";
-            JSONArray json = new JSONArray("[{\"deviceMac\":\"" + deviceMac + "\",\"timestamp\":" + timestamp + "}]");
-            JsonArrayRequest request = new JsonArrayRequest(Method.POST, urlRequest, json, new Response.Listener<JSONArray>() {
+            String urlRequest = "http://" + getUrlJee() + ":" + getPortJee() + "/AtlantisJavaEE-war/services/mobile/device/" + deviceMac + "/calculatedMetrics";
+            JsonObjectRequest request = new JsonObjectRequest(Method.GET, urlRequest, null, new Response.Listener<JSONObject>() {
                 @Override
-                public void onResponse(JSONArray response) {
+                public void onResponse(JSONObject response) {
                     try {
-                        ArrayList<Metrics> metrics = new ArrayList<>();
+                        CalcMetrics calcMetrics = new CalcMetrics();
                         if (response.length() > 0) {
-                            for (int i = 0; i < response.length(); i++) {
-                                JSONObject current = response.getJSONObject(i);
-                                String value = current.getString("value");
-                                long date = current.getLong("date");
-                                int id = current.getInt("id");
-                                metrics.add(new Metrics(id,value,date));
-                            }
+                            calcMetrics.setMonthAvg(Float.parseFloat(response.getString("monthAvg")));
+                            calcMetrics.setMonthMin(Float.parseFloat(response.getString("monthMin")));
+                            calcMetrics.setMonthMax(Float.parseFloat(response.getString("monthMax")));
+                            calcMetrics.setWeekAvg(Float.parseFloat(response.getString("weekAvg")));
+                            calcMetrics.setWeekMin(Float.parseFloat(response.getString("weekMin")));
+                            calcMetrics.setWeekMax( Float.parseFloat(response.getString("weekMax")));
+                            calcMetrics.setDayAvg(Float.parseFloat(response.getString("dayAvg")));
+                            calcMetrics.setDayMin(Float.parseFloat(response.getString("dayMin")));
+                            calcMetrics.setDayMax(Float.parseFloat(response.getString("dayMax")));
                         }
                         if (callback != null)
-                            callback.endGetLatestMetrics(metrics);
+                            callback.endGetCalculatedMetrics(calcMetrics);
                     } catch (Exception e) {
                         if (callback != null)
                             callback.endGetError("Failed to get data from web service…");
@@ -219,11 +221,10 @@ public class ClientWSSingleton{
         }
     }
 
-    public void getCalculatedMetrics(String deviceMac, long timestamp) {
+    public void getLatestMetrics(String deviceMac, String period) {
         try {
-            String urlRequest = "http://" + getUrlNet() + ":" + getPortNet() + "/AtlantisJavaEE-war/services/mobile/latestMetrics";
-            JSONArray json = new JSONArray("[{\"deviceMac\":\"" + deviceMac + "\",\"timestamp\":" + timestamp + "}]");
-            JsonArrayRequest request = new JsonArrayRequest(Method.POST, urlRequest, json, new Response.Listener<JSONArray>() {
+            String urlRequest = "http://" + getUrlJee() + ":" + getPortJee() + "/AtlantisJavaEE-war/services/mobile/device/" + deviceMac + "/" + period;
+            JsonArrayRequest request = new JsonArrayRequest(Method.GET, urlRequest, null, new Response.Listener<JSONArray>() {
                 @Override
                 public void onResponse(JSONArray response) {
                     try {
@@ -238,7 +239,7 @@ public class ClientWSSingleton{
                             }
                         }
                         if (callback != null)
-                            callback.endGetCalculatedMetrics(metrics);
+                            callback.endGetLatestMetrics(metrics);
                     } catch (Exception e) {
                         if (callback != null)
                             callback.endGetError("Failed to get data from web service…");

@@ -1,5 +1,6 @@
 package com.atlantis.mobileapp.dataaccess;
 
+import com.atlantis.mobileapp.objects.CalcMetrics;
 import com.atlantis.mobileapp.objects.Device;
 import com.atlantis.mobileapp.objects.Metrics;
 
@@ -11,7 +12,7 @@ public interface ClientWSCallBack {
     void endSendUserName(String response);
     void endGetUserDevices(ArrayList<Device> devices);
     void endGetLatestMetrics(ArrayList<Metrics> metrics);
-    void endGetCalculatedMetrics(ArrayList<Metrics> metrics);
+    void endGetCalculatedMetrics(CalcMetrics calcMetrics);
     void endSendCommand(String response);
     void endGetCommand(String resp);
 }

@@ -1,7 +1,6 @@
 package com.atlantis.mobileapp.activities;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,14 +16,13 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.atlantis.mobileapp.R;
 import com.atlantis.mobileapp.dataaccess.ClientWSCallBack;
 import com.atlantis.mobileapp.dataaccess.ClientWSSingleton;
+import com.atlantis.mobileapp.objects.CalcMetrics;
 import com.atlantis.mobileapp.objects.Device;
 import com.atlantis.mobileapp.objects.Metrics;
-import com.atlantis.mobileapp.utilities.Consts;
 import com.atlantis.mobileapp.utilities.CustomAdapter;
 
 import org.json.JSONObject;
@@ -45,7 +43,7 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
     final static String CLIENT_ID = "358ca400-fdf6-4357-8cca-27caa6699197";
     final static String CLIENT_SECRET = "*d,|`89Jnx/Ea5O8y$T724W4";
     final static String REDIRECT_URI = "https://login.microsoftonline.com/tfp/oauth2/nativeclient";
-    final static String PRIVACY = "p=B2C_1_ThirdApp-AccountLinking";
+    //final static String PRIVACY = "p=B2C_1_ThirdApp-AccountLinking";
     final static String URL_AUTH = "https://partners-login.eliotbylegrand.com/authorize?client_id=" + CLIENT_ID + "&response_type=code&redirect_uri=" + REDIRECT_URI;
 
     public static final String KEY_DEVICEMAC = "KEY_DEVICEMAC";
@@ -70,8 +68,8 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
         setTitle("Your devices");
 
         //UI INIT
-        webView = (WebView) findViewById(R.id.webView_authBis);
-        listView_devices = (ListView)findViewById(R.id.listView_devices);
+        webView = findViewById(R.id.webView_authBis);
+        listView_devices = findViewById(R.id.listView_devices);
         webView.setVisibility(View.VISIBLE);
         listView_devices.setVisibility(View.GONE);
 
@@ -115,17 +113,16 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
                         public void run() {
                             try {
                                 getToken(code);
-                                Log.d("access_token",":" + token);
+                                Log.d("token",":" + token);
                                 JSONObject jsonObject = new JSONObject(token);
                                 String idToken = jsonObject.getString("access_token");
-                                String refreshToken = jsonObject.getString("profile_info");
+                                //String refreshToken = jsonObject.getString("profile_info");
                                 sub = decoded(idToken);
                                 if(sub != null) {
                                     int indexSub = sub.indexOf("\"sub\":") + 7;
                                     sub = sub.substring(indexSub, indexSub + 36);
                                     Log.d("sub",":" + sub);
                                     clientWS.sendUserId(sub);
-                                    //clientWS.getUserDevices(sub);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -153,11 +150,10 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
             wr.write(data);
             wr.flush();
             wr.close();
-            InputStream is = null;
-            is = conn.getInputStream();
+            InputStream is = conn.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while((line = reader.readLine()) != null){
                 sb.append(line).append("\n");
             }
@@ -178,7 +174,7 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
         });
     }
 
-    public static String decoded(String JWTEncoded) throws Exception {
+    public static String decoded(String JWTEncoded) {
         try {
             String[] split = JWTEncoded.split("\\.");
             return getJson(split[1]);
@@ -201,7 +197,6 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
     public void endSendUserId(String s) {
         Log.d("sendUserId", "Done");
         if(s.equals("true")){
-            String name;
             AlertDialog.Builder dial = new AlertDialog.Builder(DevicesActivity.this);
             final EditText input = new EditText(DevicesActivity.this);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
@@ -250,7 +245,7 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
     }
 
     @Override
-    public void endGetCalculatedMetrics(ArrayList<Metrics> metrics) {
+    public void endGetCalculatedMetrics(CalcMetrics metrics) {
 
     }
 
@@ -264,5 +259,14 @@ public class DevicesActivity extends AppCompatActivity implements ClientWSCallBa
 
     }
 
-    //TODO TEST ONRESUME WEBVIEW.CLEARHISTORY ETC....
+    @Override
+    protected void onPause() {
+        super.onPause();
+        dialog.cancel();
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        dialog.cancel();
+    }
 }
